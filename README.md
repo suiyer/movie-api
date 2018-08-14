@@ -24,3 +24,15 @@ API Endpoints
 * List a page of movies with `localhost:8080/movies?pageNumber=[page_number]` (or omit the `pageNumber` query parameter to retrieve page 1)
 * Upvote a movie with `localhost:8080/movies/{:movieId}/vote`
 * Downvote a movie with `localhost:8080/movies/{:movieId}/vote?isUpvote=false`
+
+Future Improvements
+====
+* Make the TMDB API call in FetchMoviesService more robust and graceful. 
+  ** Handle rate-limiting, timeouts, backoff and retries etc.
+  ** Add more checks for bad data received from TMDB API.
+  ** Return a more informative response with number of movies created and number of movies failed.
+  ** Maybe this endpoint should be a cron job that runs every day.
+* Try out different algorithms for ranking movies.
+* A user should not be able to upvote a movie multiple times.
+* Add ORM for SQL queries.
+* Add logging.
