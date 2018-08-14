@@ -21,7 +21,7 @@ public class MoviesService {
     private static final String TITLE = "TITLE";
     private static final String OVERVIEW = "OVERVIEW";
     private static final String TAGLINE = "TAGLINE";
-    private static final String LANGUAGE = "LANGUAGE";
+    private static final String LANGUAGE = "LANG";
     private static final String RELEASE_DATE = "RELEASE_DATE";
     private static final String UPVOTES = "UPVOTES";
     private static final String DOWNVOTES = "DOWNVOTES";
@@ -29,8 +29,8 @@ public class MoviesService {
     private static final String NUM_MOVIES = "NUM_MOVIES";
 
     private static final String SELECT_MOVIES_SQL =
-            "SELECT TMDB_ID, IMDB_ID, TITLE, OVERVIEW, TAGLINE, LANGUAGE, RELEASE_DATE, UPVOTES, DOWNVOTES, " +
-                    " (0.5 * (UPVOTES + DOWNVOTES)) + (0.5 * UPVOTES) AS POPULARITY FROM MOVIES " +
+            "SELECT TMDB_ID, IMDB_ID, TITLE, OVERVIEW, TAGLINE, LANG, RELEASE_DATE, UPVOTES, DOWNVOTES, " +
+                    " (0.3 * (UPVOTES + DOWNVOTES)) + (0.7 * UPVOTES) AS POPULARITY FROM MOVIES " +
                     " ORDER BY RELEASE_DATE DESC, POPULARITY DESC LIMIT ? OFFSET ?";
     private static final String SELECT_NUM_MOVIES_SQL = "SELECT COUNT(*) AS NUM_MOVIES FROM MOVIES";
     private static final String UPDATE_UPVOTES_SQL = "UPDATE MOVIES SET UPVOTES = IFNULL(UPVOTES, 0) + 1 " +
@@ -50,7 +50,8 @@ public class MoviesService {
      * @return List of movies in the db ordered by release_date and popularity and limited by pageSize.
      */
     public List<Movie> getMovies(int pageNumber) {
-        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(SELECT_MOVIES_SQL, pageSize, pageNumber * pageSize);
+        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(SELECT_MOVIES_SQL, pageSize,
+                (pageNumber - 1) * pageSize);
         List<Movie> movies = new ArrayList<>();
 
         while (resultSet.next()) {

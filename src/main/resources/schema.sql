@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS movies (
     overview VARCHAR(2500),
     release_date DATE,
     tagline VARCHAR(500),
-    upvotes INT,
-    downvotes INT);
+    upvotes INT DEFAULT 0,
+    downvotes INT DEFAULT 0);

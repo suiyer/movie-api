@@ -71,15 +71,15 @@ public class FetchMoviesService {
                     today.format(DateTimeFormatter.ISO_LOCAL_DATE),
                     pageNumber++));
             URLConnection yc = tmdb.openConnection();
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    yc.getInputStream()));
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                JsonObject jsonObject = new JsonParser().parse(inputLine).getAsJsonObject();
-                totalPages = jsonObject.get(TOTAL_PAGES).getAsInt();
-                numMoviesCreated += createMoviesInDB(jsonObject);
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(
+                    yc.getInputStream()))) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    JsonObject jsonObject = new JsonParser().parse(inputLine).getAsJsonObject();
+                    totalPages = jsonObject.get(TOTAL_PAGES).getAsInt();
+                    numMoviesCreated += createMoviesInDB(jsonObject);
+                }
             }
-            in.close();
         } while (pageNumber <= totalPages);
 
         return numMoviesCreated;
