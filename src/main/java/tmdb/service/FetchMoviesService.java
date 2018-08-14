@@ -1,6 +1,7 @@
 package tmdb.service;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,6 +15,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * FetchMoviesService is responsible for fetching movies from the TMDB API and storing them in the db.
@@ -64,6 +67,7 @@ public class FetchMoviesService {
         int pageNumber = 1;
         int totalPages = 1;
         int numMoviesCreated = 0;
+        List<JsonObject> objects = new ArrayList<>();
 
         do {
             URL tmdb = new URL(String.format(URL_FORMAT, API_KEY,
@@ -77,10 +81,17 @@ public class FetchMoviesService {
                 while ((inputLine = in.readLine()) != null) {
                     JsonObject jsonObject = new JsonParser().parse(inputLine).getAsJsonObject();
                     totalPages = jsonObject.get(TOTAL_PAGES).getAsInt();
-                    numMoviesCreated += createMoviesInDB(jsonObject);
+                    objects.add(jsonObject);
+//                    numMoviesCreated += createMoviesInDB(jsonObject);
                 }
             }
         } while (pageNumber <= totalPages);
+
+        for (JsonObject jsonObject : objects) {
+            numMoviesCreated += createMoviesInDB(jsonObject);
+        }
+
+        jdbcTemplate.queryForList("show tables");
 
         return numMoviesCreated;
     }
@@ -95,9 +106,19 @@ public class FetchMoviesService {
         System.out.println("Total Results:" + jsonObject.get(TOTAL_RESULTS).getAsInt());
         System.out.println("No. of results on this page: " + jarray.size());
 
-        for (int i = 0; i < jarray.size(); i++) {
-            JsonObject jsonMovie = jarray.get(i).getAsJsonObject();
-            numMoviesCreated += jdbcTemplate.update(
+        for (JsonElement movieElement : jarray) {
+            JsonObject jsonMovie = movieElement.getAsJsonObject();
+
+            System.out.println(String.format("%s | %s | %s | %s | %s | %s | %s",
+                    jsonMovie.get(ID).getAsInt(),
+                    jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null,
+                    jsonMovie.get(TITLE).getAsString(),
+                    jsonMovie.get(LANGUAGE) != null ? jsonMovie.get(LANGUAGE).getAsString() : null,
+                    jsonMovie.get(OVERVIEW).getAsString(),
+                    jsonMovie.get(TAGLINE) != null ? jsonMovie.get(TAGLINE).getAsString() : null,
+                    jsonMovie.get(RELEASE_DATE).getAsString()));
+
+            int result = jdbcTemplate.update(
                     INSERT_MOVIE_SQL,
                     jsonMovie.get(ID).getAsInt(),
                     jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null,
@@ -106,6 +127,16 @@ public class FetchMoviesService {
                     jsonMovie.get(OVERVIEW).getAsString(),
                     jsonMovie.get(TAGLINE) != null ? jsonMovie.get(TAGLINE).getAsString() : null,
                     jsonMovie.get(RELEASE_DATE).getAsString());
+
+            if (result < 1) {
+                System.out.println(String.format(
+                        "WARNING: Row for movie ID %d (IMDB ID %s) not inserted. Insert result: %d",
+                        jsonMovie.get(ID).getAsInt(),
+                        jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null,
+                        result));
+            }
+
+            numMoviesCreated += result;
         }
 
         return numMoviesCreated;
