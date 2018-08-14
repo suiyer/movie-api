@@ -1,25 +1,29 @@
-package tmdb;
+package tmdb.endpoint;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tmdb.response.FetchMoviesResponse;
+import tmdb.service.FetchMoviesService;
+import tmdb.response.ListMoviesResponse;
+import tmdb.response.MovieVoteResponse;
+import tmdb.service.MoviesService;
 
 @RestController
-public class MoviesController {
+public class MoviesEndpoint {
 
-    private HydrateMoviesService ingester = new HydrateMoviesService();
+    private FetchMoviesService fetchService = new FetchMoviesService();
     private MoviesService service = new MoviesService();
 
     @RequestMapping("/hydrate")
-    public HydrateMoviesResponse hydrate(@RequestParam(value = "dailyUpdate", defaultValue = "false") boolean dailyUpdate)
+    public FetchMoviesResponse fetchMovies(@RequestParam(value = "dailyUpdate", defaultValue = "false") boolean dailyUpdate)
             throws IOException, SQLException {
-        HydrateMoviesResponse response = new HydrateMoviesResponse();
-        response.setNumMoviesCreated(ingester.hydrateDB(dailyUpdate));
+        FetchMoviesResponse response = new FetchMoviesResponse();
+        response.setNumMoviesCreated(fetchService.fetchMovies(dailyUpdate));
 
         return response;
     }

@@ -1,4 +1,4 @@
-package tmdb;
+package tmdb.response;
 
 public class MovieVoteResponse {
 

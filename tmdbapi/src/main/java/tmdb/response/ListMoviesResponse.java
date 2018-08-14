@@ -1,4 +1,4 @@
-package tmdb;
+package tmdb.response;
 
 import java.util.Date;
 import java.util.List;

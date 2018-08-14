@@ -1,4 +1,4 @@
-package tmdb;
+package tmdb.db;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 

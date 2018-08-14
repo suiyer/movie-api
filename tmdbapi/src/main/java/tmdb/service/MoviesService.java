@@ -1,12 +1,14 @@
-package tmdb;
+package tmdb.service;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import tmdb.ListMoviesResponse.Movie;
+
+import tmdb.db.DatabaseConnectionManager;
+import tmdb.response.ListMoviesResponse.Movie;
 
 /**
- * MoviesService fulfills the db operations for MoviesController.
+ * MoviesService fulfills the db operations for MoviesEndpoint.
  */
 public class MoviesService {
     private static final DatabaseConnectionManager db = DatabaseConnectionManager.getInstance();
@@ -41,7 +43,7 @@ public class MoviesService {
      * @return List of movies in the db ordered by release_date and popularity and limited by pageSize.
      * @throws java.sql.SQLException if there is a problem with the db connection.
      */
-    List<Movie> getMovies(int pageNumber) throws java.sql.SQLException {
+    public List<Movie> getMovies(int pageNumber) throws java.sql.SQLException {
         List<Movie> movies = new ArrayList<>();
         try (Connection connection = db.getConnection();
             PreparedStatement statement = connection.prepareStatement(SELECT_MOVIES_SQL)){
@@ -65,13 +67,13 @@ public class MoviesService {
         return movies;
     }
 
-    int getNumberOfMoviePages() throws java.sql.SQLException {
+    public int getNumberOfMoviePages() throws java.sql.SQLException {
         int numMovies = getNumberOfMovies();
 
         return numMovies % pageSize == 0 ? numMovies / pageSize : (numMovies / pageSize + 1);
     }
 
-    int getNumberOfMovies() throws SQLException {
+    public int getNumberOfMovies() throws SQLException {
         int numMovies = 0;
         try (Connection connection = db.getConnection();
         PreparedStatement statement = connection.prepareStatement(SELECT_NUM_MOVIES_SQL)) {
@@ -83,7 +85,7 @@ public class MoviesService {
         return numMovies;
     }
 
-    int vote(boolean isUpvote, int tmdbId) throws SQLException {
+    public int vote(boolean isUpvote, int tmdbId) throws SQLException {
         try (Connection connection = db.getConnection()) {
             PreparedStatement statement;
             if (isUpvote) {

@@ -1,8 +1,9 @@
-package tmdb;
+package tmdb.service;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import tmdb.db.DatabaseConnectionManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,9 +17,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /*
- * HydrateMoviesService is responsible for fetching movies from the TMDB API and storing them in the db.
+ * FetchMoviesService is responsible for fetching movies from the TMDB API and storing them in the db.
  */
-public class HydrateMoviesService {
+public class FetchMoviesService {
 
     private static final String INSERT_MOVIE_SQL = "INSERT IGNORE INTO MOVIES " +
             "(tmdb_id, imdb_id, title, language, overview, tagline, release_date)" +
@@ -50,7 +51,7 @@ public class HydrateMoviesService {
      * @throws SQLException if there are problems with the db connection.
      * @throws IOException if there is a problem with the API access URL.
      */
-    public int hydrateDB(boolean dailyUpdate) throws SQLException, IOException {
+    public int fetchMovies(boolean dailyUpdate) throws SQLException, IOException {
         LocalDate today = LocalDate.now();
         int numDaysToUpdate = 7;
         if (dailyUpdate) {

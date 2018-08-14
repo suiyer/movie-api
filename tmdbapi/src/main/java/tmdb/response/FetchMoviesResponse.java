@@ -1,9 +1,9 @@
-package tmdb;
+package tmdb.response;
 
 /**
- * HydrateMoviesResponse is the response class for the hydrateMovies API method.
+ * FetchMoviesResponse is the response class for the fetchMovies API method.
  */
-public class HydrateMoviesResponse {
+public class FetchMoviesResponse {
     private int numMoviesCreated;
     private int numMoviesFailed;
 
