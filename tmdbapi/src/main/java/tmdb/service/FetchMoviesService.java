@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -23,7 +22,7 @@ import java.time.format.DateTimeFormatter;
 public class FetchMoviesService {
 
     private static final String INSERT_MOVIE_SQL = "INSERT IGNORE INTO MOVIES " +
-            "(tmdb_id, imdb_id, title, language, overview, tagline, release_date)" +
+            "(tmdb_id, imdb_id, title, lang, overview, tagline, release_date)" +
             " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     private static final String URL_FORMAT = "https://api.themoviedb.org/3/discover/movie?" +
@@ -37,7 +36,7 @@ public class FetchMoviesService {
     private static final String TOTAL_PAGES = "total_pages";
     private static final String IMDB_ID = "imdb_id";
     private static final String TITLE = "title";
-    private static final String LANGUAGE = "language";
+    private static final String LANGUAGE = "lang";
     private static final String OVERVIEW = "overview";
     private static final String TAGLINE = "tagline";
     private static final String RELEASE_DATE = "release_date";
@@ -53,10 +52,9 @@ public class FetchMoviesService {
      * Connects to the TMDB API, parses the JSON response, and creates movies in the db.
      * @param dailyUpdate Whether this is a daily update or weekly update.
      * @return the number of movies created in the db.
-     * @throws SQLException if there are problems with the db connection.
      * @throws IOException if there is a problem with the API access URL.
      */
-    public int fetchMovies(boolean dailyUpdate) throws SQLException, IOException {
+    public int fetchMovies(boolean dailyUpdate) throws IOException {
         LocalDate today = LocalDate.now();
         int numDaysToUpdate = 7;
         if (dailyUpdate) {
@@ -87,12 +85,15 @@ public class FetchMoviesService {
         return numMoviesCreated;
     }
 
+    // This method needs to be public in order for the @Transactional annotation to work correctly
     @Transactional
-    private int createMoviesInDB(JsonObject jsonObject) throws SQLException {
+    public int createMoviesInDB(JsonObject jsonObject) {
         int numMoviesCreated = 0;
+        JsonArray jarray = jsonObject.getAsJsonArray(RESULTS);
+
         System.out.println("Page no:" + jsonObject.get(PAGE).getAsInt());
         System.out.println("Total Results:" + jsonObject.get(TOTAL_RESULTS).getAsInt());
-        JsonArray jarray = jsonObject.getAsJsonArray(RESULTS);
+        System.out.println("No. of results on this page: " + jarray.size());
 
         for (int i = 0; i < jarray.size(); i++) {
             JsonObject jsonMovie = jarray.get(i).getAsJsonObject();

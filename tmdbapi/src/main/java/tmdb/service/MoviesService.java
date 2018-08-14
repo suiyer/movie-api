@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tmdb.response.ListMoviesResponse.Movie;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,9 +48,8 @@ public class MoviesService {
      * Calculates the offset for the query to the db and queries the db for the list of movies.
      * @param pageNumber The page number in the list of movies to return. Determines the offset for the db.
      * @return List of movies in the db ordered by release_date and popularity and limited by pageSize.
-     * @throws java.sql.SQLException if there is a problem with the db connection.
      */
-    public List<Movie> getMovies(int pageNumber) throws java.sql.SQLException {
+    public List<Movie> getMovies(int pageNumber) {
         SqlRowSet resultSet = jdbcTemplate.queryForRowSet(SELECT_MOVIES_SQL, pageSize, pageNumber * pageSize);
         List<Movie> movies = new ArrayList<>();
 
@@ -71,19 +69,18 @@ public class MoviesService {
         return movies;
     }
 
-    public int getNumberOfMoviePages() throws java.sql.SQLException {
+    public int getNumberOfMoviePages() {
         int numMovies = getNumberOfMovies();
 
         return numMovies % pageSize == 0 ? numMovies / pageSize : (numMovies / pageSize + 1);
     }
 
-    public int getNumberOfMovies() throws SQLException {
+    public int getNumberOfMovies() {
         return jdbcTemplate.queryForObject(SELECT_NUM_MOVIES_SQL, Integer.class);
     }
 
     @Transactional
-    public int vote(boolean isUpvote, int tmdbId) throws SQLException {
-        String query = isUpvote ? UPDATE_UPVOTES_SQL : UPDATE_DOWNVOTES_SQL;
-        return jdbcTemplate.update(query);
+    public int vote(boolean isUpvote, int tmdbId) {
+        return jdbcTemplate.update(isUpvote ? UPDATE_UPVOTES_SQL : UPDATE_DOWNVOTES_SQL, tmdbId);
     }
 }
