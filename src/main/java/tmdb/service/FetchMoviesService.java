@@ -130,10 +130,12 @@ public class FetchMoviesService {
 
             if (result < 1) {
                 System.out.println(String.format(
-                        "WARNING: Row for movie ID %d (IMDB ID %s) not inserted. Insert result: %d",
+                        "WARNING: Row for movie ID %d (IMDB ID %s) not inserted because it already exists. Insert result: %d",
                         jsonMovie.get(ID).getAsInt(),
                         jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null,
                         result));
+            } else {
+                System.out.println("SUCCESS");
             }
 
             numMoviesCreated += result;
