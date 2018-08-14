@@ -1,23 +1,25 @@
 package tmdb.endpoint;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tmdb.response.FetchMoviesResponse;
-import tmdb.service.FetchMoviesService;
 import tmdb.response.ListMoviesResponse;
 import tmdb.response.MovieVoteResponse;
+import tmdb.service.FetchMoviesService;
 import tmdb.service.MoviesService;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 @RestController
 public class MoviesEndpoint {
-
-    private FetchMoviesService fetchService = new FetchMoviesService();
-    private MoviesService service = new MoviesService();
+    @Autowired
+    private FetchMoviesService fetchService;
+    @Autowired
+    private MoviesService service;
 
     @RequestMapping("/hydrate")
     public FetchMoviesResponse fetchMovies(@RequestParam(value = "dailyUpdate", defaultValue = "false") boolean dailyUpdate)

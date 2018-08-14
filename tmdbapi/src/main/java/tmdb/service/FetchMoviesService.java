@@ -3,15 +3,15 @@ package tmdb.service;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import tmdb.db.DatabaseConnectionManager;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 /*
  * FetchMoviesService is responsible for fetching movies from the TMDB API and storing them in the db.
  */
+@Component
 public class FetchMoviesService {
 
     private static final String INSERT_MOVIE_SQL = "INSERT IGNORE INTO MOVIES " +
@@ -42,7 +43,11 @@ public class FetchMoviesService {
     private static final String RELEASE_DATE = "release_date";
     private static final String RESULTS = "results";
 
-    private DatabaseConnectionManager db = DatabaseConnectionManager.getInstance();
+    private final JdbcTemplate jdbcTemplate;
+
+    public FetchMoviesService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     /**
      * Connects to the TMDB API, parses the JSON response, and creates movies in the db.
@@ -82,31 +87,24 @@ public class FetchMoviesService {
         return numMoviesCreated;
     }
 
+    @Transactional
     private int createMoviesInDB(JsonObject jsonObject) throws SQLException {
         int numMoviesCreated = 0;
         System.out.println("Page no:" + jsonObject.get(PAGE).getAsInt());
         System.out.println("Total Results:" + jsonObject.get(TOTAL_RESULTS).getAsInt());
         JsonArray jarray = jsonObject.getAsJsonArray(RESULTS);
-        try (Connection connection = db.getConnection();
-             PreparedStatement statement = connection.prepareStatement(INSERT_MOVIE_SQL)) {
 
-            for (int i = 0; i < jarray.size(); i++) {
-                JsonObject jsonMovie = jarray.get(i).getAsJsonObject();
-
-                statement.setInt(1, jsonMovie.get(ID).getAsInt());
-                statement.setString(2,
-                        jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null);
-                statement.setString(3, jsonMovie.get(TITLE).getAsString());
-                statement.setString(4,
-                        jsonMovie.get(LANGUAGE) != null ? jsonMovie.get(LANGUAGE).getAsString() : null);
-                statement.setString(5, jsonMovie.get(OVERVIEW).getAsString());
-                statement.setString(6,
-                        jsonMovie.get(TAGLINE) != null ? jsonMovie.get(TAGLINE).getAsString() : null);
-                statement.setString(7, jsonMovie.get(RELEASE_DATE).getAsString());
-
-                statement.executeUpdate();
-                numMoviesCreated += statement.getUpdateCount();
-            }
+        for (int i = 0; i < jarray.size(); i++) {
+            JsonObject jsonMovie = jarray.get(i).getAsJsonObject();
+            numMoviesCreated += jdbcTemplate.update(
+                    INSERT_MOVIE_SQL,
+                    jsonMovie.get(ID).getAsInt(),
+                    jsonMovie.get(IMDB_ID) != null ? jsonMovie.get(IMDB_ID).getAsString() : null,
+                    jsonMovie.get(TITLE).getAsString(),
+                    jsonMovie.get(LANGUAGE) != null ? jsonMovie.get(LANGUAGE).getAsString() : null,
+                    jsonMovie.get(OVERVIEW).getAsString(),
+                    jsonMovie.get(TAGLINE) != null ? jsonMovie.get(TAGLINE).getAsString() : null,
+                    jsonMovie.get(RELEASE_DATE).getAsString());
         }
 
         return numMoviesCreated;
